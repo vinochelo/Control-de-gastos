@@ -1,0 +1,5 @@
+{
+  "name": "Finanzas Bot (Telegram + Groq)",
+  "description": "Bot de Telegram para gestión de finanzas personales usando Groq AI para clasificación de lenguaje natural y Firebase para almacenamiento.",
+  "requestFramePermissions": []
+}

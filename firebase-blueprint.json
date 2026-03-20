@@ -1,0 +1,129 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction (income, expense, or transfer).",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this transaction."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["expense", "income", "transfer"],
+          "description": "The type of transaction."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "account": {
+          "type": "string",
+          "enum": [
+            "Efectivo",
+            "Produbanco",
+            "Banco de Guayaquil",
+            "De Una",
+            "Pichincha",
+            "American Express"
+          ],
+          "description": "The primary account involved."
+        },
+        "toAccount": {
+          "type": "string",
+          "enum": [
+            "Efectivo",
+            "Produbanco",
+            "Banco de Guayaquil",
+            "De Una",
+            "Pichincha",
+            "American Express"
+          ],
+          "description": "The destination account (only for transfers)."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the transaction (e.g., Transporte, Restaurantes)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the transaction."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the transaction."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the record was created."
+        }
+      },
+      "required": ["userId", "type", "amount", "account", "date", "createdAt"]
+    },
+    "UserConfig": {
+      "title": "UserConfig",
+      "description": "User configuration, mapping Telegram ID to Firebase UID.",
+      "type": "object",
+      "properties": {
+        "telegramId": {
+          "type": "number",
+          "description": "The Telegram user ID."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The Firebase user ID."
+        }
+      },
+      "required": ["userId"]
+    },
+    "WebhookLog": {
+      "title": "WebhookLog",
+      "description": "Log of incoming webhook events for debugging.",
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "description": "The ID associated with the event (Telegram ID)."
+        },
+        "source": {
+          "type": "string",
+          "enum": ["telegram"],
+          "description": "The source of the event."
+        },
+        "event": {
+          "type": "object",
+          "description": "The raw event data from the platform."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the event was received."
+        }
+      },
+      "required": ["sourceId", "source", "event", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/Transaction"
+      },
+      "description": "Collection of all financial transactions."
+    },
+    "/userConfigs/{configId}": {
+      "schema": {
+        "$ref": "#/entities/UserConfig"
+      },
+      "description": "Mappings from Telegram IDs to Firebase UIDs."
+    },
+    "/webhookLogs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/WebhookLog"
+      },
+      "description": "Logs of incoming Telegram webhook events."
+    }
+  }
+}

@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isBotWrite() {
+      return request.resource.data.isBotWrite == true;
+    }
+
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidTransaction(data) {
+      let allowedTypes = ['expense', 'income', 'transfer'];
+      
+      return data.userId is string && data.userId.size() > 0 &&
+             data.type in allowedTypes &&
+             data.amount is number && data.amount > 0 &&
+             data.account is string && data.account.size() <= 50 &&
+             (!('toAccount' in data) || (data.toAccount is string && data.toAccount.size() <= 50)) &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 200)) &&
+             data.date is string &&
+             data.createdAt is string;
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if true; // Allow all reads for the server
+      allow create: if isBotWrite() || (isAuthenticated() && 
+                    request.resource.data.userId == request.auth.uid &&
+                    hasRequiredFields(['userId', 'type', 'amount', 'account', 'date', 'createdAt']) &&
+                    isValidTransaction(request.resource.data));
+      allow update: if isBotWrite() || (isDocOwner() && 
+                    uidNotModified() &&
+                    isValidTransaction(request.resource.data));
+      allow delete: if isDocOwner();
+    }
+
+    match /userConfigs/{configId} {
+      // Users can read their own config, bot can read all
+      allow read: if true; // Allow bot to read to find user by telegram ID
+      // Users can create their own config, bot can create
+      allow create: if isBotWrite() || (isAuthenticated() && 
+                    request.resource.data.userId == request.auth.uid &&
+                    hasRequiredFields(['userId']) &&
+                    (
+                      ('telegramId' in request.resource.data && request.resource.data.telegramId is number)
+                    ));
+      allow update: if isBotWrite() || (isAuthenticated() && 
+                    resource.data.userId == request.auth.uid &&
+                    uidNotModified() &&
+                    (
+                      (!('telegramId' in request.resource.data) || request.resource.data.telegramId is number)
+                    ));
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /userSettings/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /webhookLogs/{logId} {
+      allow read: if true; // Allow server to read logs
+      allow create: if isBotWrite();
+      allow update, delete: if false;
+    }
+  }
+}
