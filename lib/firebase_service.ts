@@ -6,7 +6,9 @@ const firebaseConfig = {
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || firebaseConfigDefault.authDomain,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || firebaseConfigDefault.projectId,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || firebaseConfigDefault.appId,
-  firestoreDatabaseId: process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID || firebaseConfigDefault.firestoreDatabaseId
+  firestoreDatabaseId: process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID || firebaseConfigDefault.firestoreDatabaseId,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (firebaseConfigDefault as any).storageBucket,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || (firebaseConfigDefault as any).messagingSenderId
 };
 
 // Initialize Firebase Admin
