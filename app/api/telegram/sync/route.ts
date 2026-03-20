@@ -8,21 +8,41 @@ const getApiUrl = () => `https://api.telegram.org/bot${getBotToken()}`;
 // Store the last update ID in memory (works for a single instance dev server)
 let lastUpdateId = 0;
 
+async function fetchWithTimeout(url: string, options: any = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
 async function sendMessage(chatId: number, text: string) {
   const token = getBotToken();
   if (!token) return;
   const apiUrl = getApiUrl();
-  await fetch(`${apiUrl}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text }),
-  });
+  try {
+    await fetchWithTimeout(`${apiUrl}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+  } catch (e) {
+    console.error("Failed to send message:", e);
+  }
 }
 
 async function getFileUrl(fileId: string): Promise<string> {
   const token = getBotToken();
   const apiUrl = getApiUrl();
-  const res = await fetch(`${apiUrl}/getFile?file_id=${fileId}`);
+  const res = await fetchWithTimeout(`${apiUrl}/getFile?file_id=${fileId}`);
   const data = await res.json();
   if (!data.ok) throw new Error("Failed to get file info");
   return `https://api.telegram.org/file/bot${token}/${data.result.file_path}`;
@@ -31,7 +51,7 @@ async function getFileUrl(fileId: string): Promise<string> {
 export async function POST(req: Request) {
   const token = getBotToken();
   if (!token) {
-    return NextResponse.json({ error: "No token" }, { status: 400 });
+    return NextResponse.json({ error: "No TELEGRAM_BOT_TOKEN set in environment variables." }, { status: 400 });
   }
 
   try {
@@ -39,10 +59,14 @@ export async function POST(req: Request) {
     const apiUrl = getApiUrl();
 
     // 1. Delete webhook to ensure getUpdates works
-    await fetch(`${apiUrl}/deleteWebhook`);
+    try {
+      await fetchWithTimeout(`${apiUrl}/deleteWebhook`, {}, 5000);
+    } catch (e) {
+      console.warn("Failed to delete webhook, continuing anyway.");
+    }
 
     // 2. Get updates
-    const updatesRes = await fetch(`${apiUrl}/getUpdates?offset=${lastUpdateId + 1}&timeout=5`);
+    const updatesRes = await fetchWithTimeout(`${apiUrl}/getUpdates?offset=${lastUpdateId + 1}&timeout=5`, {}, 15000);
     const updatesData = await updatesRes.json();
 
     if (!updatesData.ok || !updatesData.result || updatesData.result.length === 0) {

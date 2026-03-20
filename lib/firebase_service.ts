@@ -1,14 +1,16 @@
 import firebaseConfigDefault from "../firebase-applet-config.json";
 
 // Use environment variables if available (for Vercel), otherwise fallback to the config file
+const isPlaceholder = (val: string | undefined) => !val || val.startsWith("YOUR_") || val.startsWith("MY_");
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || firebaseConfigDefault.apiKey,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || firebaseConfigDefault.authDomain,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || firebaseConfigDefault.projectId,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || firebaseConfigDefault.appId,
-  firestoreDatabaseId: process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID || firebaseConfigDefault.firestoreDatabaseId,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (firebaseConfigDefault as any).storageBucket,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || (firebaseConfigDefault as any).messagingSenderId
+  apiKey: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) ? process.env.NEXT_PUBLIC_FIREBASE_API_KEY : firebaseConfigDefault.apiKey,
+  authDomain: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ? process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN : firebaseConfigDefault.authDomain,
+  projectId: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) ? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID : firebaseConfigDefault.projectId,
+  appId: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_APP_ID) ? process.env.NEXT_PUBLIC_FIREBASE_APP_ID : firebaseConfigDefault.appId,
+  firestoreDatabaseId: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID) ? process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID : firebaseConfigDefault.firestoreDatabaseId,
+  storageBucket: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) ? process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET : (firebaseConfigDefault as any).storageBucket,
+  messagingSenderId: !isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) ? process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID : (firebaseConfigDefault as any).messagingSenderId
 };
 
 // Initialize Firebase Admin
